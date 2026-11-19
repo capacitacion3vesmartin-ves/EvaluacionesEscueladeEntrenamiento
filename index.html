@@ -1139,8 +1139,9 @@ body:has(.wfull){overflow:hidden}
 </head><body>
 <div class="bn" id="bn"></div><div id="app"></div><div id="t"></div>
 <!-- ▼ "sede" debe llamarse IGUAL que en la pestaña Sedes de la hoja. "hoja" = URL (/exec) del Apps Script de la Escuela (notas por tema). "tok" = TOKEN_EVA del script (opcional). -->
+<!-- ▼ "hoja" también trae el personal (id, nombre, dni, área, sede, foto, clave) y los grupos desde la hoja: ya no se registran aquí. -->
 <!-- ▼ Pega aquí la URL de TU Apps Script (termina en /exec) dentro de "api". Si la dejas vacía, la app funciona solo en este equipo. -->
-<script id="cfg" type="application/json">{"api":"","sede":"General","hoja":"","tok":""}</script>
+<script id="cfg" type="application/json">{"api":"","sede":"General","sedes":["Villa el Salvador","Puente Piedra","Piura","Arequipa"],"hoja":"https://script.google.com/macros/s/AKfycbxLWdm8-VTyYTSR5ZSH3Az5xvsklRy_nLmXZDP2Tq_j9Qk-LkSkOUAJYh_ERcMe7Rbk/exec","tok":""}</script>
 <script>
 const $=id=>document.getElementById(id),A=$('app'),CFG=(()=>{try{return JSON.parse($('cfg').textContent)}catch(x){return{}}})(),API=CFG.api||'';
 let PT=0,DB={folders:[],evals:[]},M=false,KEY='',F='all',CUR=null,PLAY=false,ED=false,SEL=null,DR=null;
@@ -1157,7 +1158,7 @@ function save(srv){clearTimeout(PT);if(ED&&!PLAY&&CUR&&$("pv"))PT=setTimeout(pvr
 async function load(){cargarFotosEv();if(API){try{localStorage.removeItem('evg_db')}catch(x){}}else{try{DB=JSON.parse(localStorage.getItem('evg_db'))||DB}catch(x){}}
  DBi();
  render()}
-function bn(){const run=!!(RUN&&!RUN.done);$('bn').innerHTML=(CUR?'<button style="left:8px" onclick="back()">← '+(M&&ED?'Volver':'Inicio')+'</button>':'')+'<span class="bnt">EVALUACIONES</span>'+(ROL&&!run?'<button style="right:8px'+(M?';background:#e11d48;color:#fff':'')+'" onclick="salir()">Salir</button>':'')}
+function bn(){const run=!!(RUN&&!RUN.done);$('bn').innerHTML=(CUR?'<button style="left:8px" onclick="back()">← '+(M&&ED?'Volver':'Inicio')+'</button>':'')+'<span class="bnt">EVALUACIONES - ESCUELA DE ENTRENAMIENTO</span>'+(ROL&&!run?'<button style="right:8px'+(M?';background:#e11d48;color:#fff':'')+'" onclick="salir()">Salir</button>':'')}
 function render(){document.body.classList.toggle('w',!CUR||(M&&!PLAY));bn();CUR?(PLAY?play(CUR):edit(CUR)):lib();scrollTo(0,0)}
 function back(){if(PLAY&&M&&ED){PLAY=false}else{if(CUR&&M)save(1);CUR=null;PLAY=false}render()}
 
@@ -1572,7 +1573,7 @@ let GUEST=false,VW='ev',RQ='',RD1='',RD2='',NMOD=0,NQ='',NG=null,SID=null,TM=nul
 const DBi=()=>{DB.al=DB.al||[];DB.as=DB.as||[];DB.rs=DB.rs||[];DB.ar=DB.ar||['General'];DB.cp=DB.cp||[];DB.gr=DB.gr||[]},
 AR=()=>DB.ar.length?DB.ar:['General'],
 gcfg=v=>Object.assign({min:0,int:0,ap:13,mz:0,dl:0,ins:'',ar:''},v.cf||{},{int:0}),
-tg=a=>DB.al.filter(x=>a.t==='a'?(a.w==='*'||x.a===a.w):a.t==='g'?x.g===a.w:a.t==='l'?(a.l||[]).includes(x.id):x.id===a.w),
+tg=a=>DB.al.filter(x=>a.t==='a'?(a.w==='*'||x.a===a.w):a.t==='g'?(x.g===a.w||(x.gs||[]).includes(a.w)):a.t==='l'?(a.l||[]).includes(x.id):x.id===a.w),
 LB={ok:['Aprobado','ok'],no:['Desaprobado','no'],late:['No rindió','no'],re:['Reintentar','re'],p:['Pendiente','p']},
 sv=()=>{save(1);render()},stopT=()=>{clearInterval(TM);endGuard();const t=$('tmr');if(t)t.remove();const f=$('finb');if(f)f.remove()};
 function stt(a,sid){const v=DB.evals.find(v=>v.id===a.e);if(!v)return{};const c=Object.assign({},gcfg(v),{int:+a.i||0}),R=DB.rs.filter(r=>r.al===sid&&r.as===a.id),F=R.filter(r=>r.n!=null),best=Math.max(0,...F.map(r=>r.n)),late=a.d&&Date.now()>new Date(a.d+'T23:59:59'),left=c.int?Math.max(0,c.int+((a.b||{})[sid]||0)-R.length):null;
@@ -1727,8 +1728,8 @@ gsUser=n=>{const t=nz(n).replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean
 gsTaken=()=>{const s=new Set();(DB.al||[]).forEach(a=>s.add(unorm(a.c)));(DB.cp||[]).forEach(c=>s.add(unorm(c.c)));return s},
 gsFree=(b,s)=>{const u=b||'usuario';let k=u,i=1;while(s.has(k))k=u+(++i);return k},
 gsGrp=()=>{const G=DB.gr||[];if(GS.g&&G.some(g=>g.id===GS.g))return GS.g;GS.g=G.length?peGnew():null;return GS.g},
-gsList=id=>(DB.al||[]).filter(a=>a.g===id).sort((a,b)=>String(a.n).localeCompare(String(b.n),'es')),
-gsPl=n=>n+' persona'+(n===1?'':'s');
+gsList=id=>(DB.al||[]).filter(a=>a.g===id||(a.gs||[]).includes(id)).sort((a,b)=>String(a.n).localeCompare(String(b.n),'es')),
+gsPl=n=>n+' asesor'+(n===1?'':'es');
 function gsWarn(i){const r=(GS.rows||[])[i];if(!r)return'';const c=unorm(r.c);if(!c)return'';if(gsTaken().has(c))return'⚠️ Ese usuario ya existe';if(GS.rows.some((z,j)=>j!==i&&unorm(z.c)===c))return'⚠️ Repetido en otra fila';return''}
 function gsF(i,k,v){if(!GS.rows||!GS.rows[i])return;GS.rows[i][k]=v;if(k==='c')GS.rows.forEach((z,j)=>{const w=$('gsw'+j);if(w)w.textContent=gsWarn(j)})}
 /* subir foto en una fila */
@@ -1777,14 +1778,14 @@ function gsCsv(){const g=(DB.gr||[]).find(x=>x.id===GS.g);if(!g)return;const row
 function gsRowsH(){return GS.rows.map((r,i)=>`<tr><td>${i+1}</td><td><input id="gsc${i}" value="${e(r.c)}" oninput="gsF(${i},'c',this.value)" autocomplete="off" inputmode="numeric" spellcheck="false" placeholder="N.º de DNI"><small id="gsw${i}" style="color:#b45309;font-weight:700;display:block">${e(gsWarn(i))}</small></td><td><input value="${e(r.n)}" oninput="gsF(${i},'n',this.value)" autocomplete="off" placeholder="Nombres y apellidos"></td><td><input id="gsk${i}" value="${e(r.k)}" oninput="gsF(${i},'k',this.value)" autocomplete="off" placeholder="Clave (obligatoria)"></td><td><div class="ft">${peAv({n:r.n,f:r.f},34)}<button type="button" class="btn" onclick="this.nextElementSibling.click()">${peCam}${r.f?'Cambiar':'Agregar foto'}</button><input type="file" accept="image/*" hidden onchange="gsSube(${i},this)">${r.f?`<button type="button" class="btn dg" onclick="gsQf(${i})" title="Quitar foto">✕</button>`:''}</div></td><td><button type="button" class="btn dg" onclick="gsDel(${i})" title="Quitar fila">✕</button></td></tr>`).join('')}
 function pal(){
  const G=[...(DB.gr||[])].sort((a,b)=>(+b.c||0)-(+a.c||0)),sid=gsGrp(),g=(DB.gr||[]).find(x=>x.id===sid);
- const side=`<div class="card"><h3>Grupos</h3><div class="gl">${G.map(x=>{const n=gsList(x.id).length;return `<button type="button" class="gc${x.id===sid?' on':''}" onclick="gsGo('${x.id}')"><b>${e(x.n)}</b><small>${gsPl(n)}</small></button>`}).join('')||'<p class="mu" style="margin:0 0 8px">Aún no hay grupos.</p>'}</div><div class="gnw"><input id="ngr" placeholder="Nombre del nuevo grupo" autocomplete="off" onkeydown="if(event.key===\'Enter\')addGr()"><button type="button" class="btn pr" onclick="addGr()">+ Crear grupo</button></div></div>`;
+ const side=`<div class="card"><h3>Grupos</h3><div class="gl">${G.map(x=>{const n=gsList(x.id).length;return `<button type="button" class="gc${x.id===sid?' on':''}" onclick="gsGo('${x.id}')"><b>${e(x.n)}</b><small>${gsPl(n)}</small></button>`}).join('')||'<p class="mu" style="margin:0 0 8px">Aún no hay grupos.</p>'}</div><div class="gsr"><button type="button" class="btn pr" onclick="capRefresh()">⟳ Actualizar desde la hoja</button><p class="mu">Los grupos y los asesores se leen de la hoja: los registra el capacitador en su HTML.</p>${window.hpEstado?window.hpEstado():''}</div></div>`;
  let main='';
- if(!g)main=`<div class="card"><div class="msg">Crea tu primer grupo a la izquierda. Después le agregas personas con su DNI y clave.</div></div>`;
+ if(!g)main=`<div class="card"><div class="msg">Aún no hay grupos en la hoja. Créalos en el HTML del capacitador y pulsa «Actualizar desde la hoja».</div></div>`;
  else{
   const L=gsList(g.id),q=nz(GS.q),V=L.filter(a=>!q||nz(a.n+' '+a.c).includes(q));
-  main=`<div class="card"><div class="bar"><h3 style="margin:0;font-size:19px">${e(g.n)}</h3><span class="mu">${gsPl(L.length)}</span><span style="flex:1"></span><button type="button" class="btn" onclick="renGr('${g.id}')">Renombrar</button><button type="button" class="btn dg" onclick="delGr('${g.id}')">Eliminar grupo</button></div><div class="bar" style="margin:0"><button type="button" class="btn pr" onclick="gsTgl()">${GS.add?'Cerrar':'+ Agregar personas'}</button><button type="button" class="btn" onclick="VW=\'asg\';render()">Asignar un examen a este grupo →</button></div></div>`;
-  if(GS.add){gsEns();main+=`<div class="card"><h3>Agregar personas a «${e(g.n)}»</h3><p class="mu" style="margin:0 0 10px">Completa el <b>DNI</b> (será su usuario de ingreso), los <b>nombres y apellidos</b> y una <b>clave</b> (mínimo 4 caracteres). El DNI, el nombre y la clave son obligatorios. La foto es opcional.</p>${GS.ok?`<div class="rol" style="background:#e7f6ec;border-color:#b6e2c4;color:#14532d">${e(GS.ok)}</div>`:''}<div class="tw"><table class="rtb"><tr><th>#</th><th>DNI</th><th>Nombres y apellidos</th><th>Clave</th><th>Foto</th><th></th></tr>${gsRowsH()}</table></div><div class="bar" style="margin:12px 0 0"><button type="button" class="btn" onclick="gsRow(1)">+ Fila</button><button type="button" class="btn" onclick="gsRow(5)">+ 5 filas</button><button type="button" class="btn" onclick="gsPaste()">${GS.paste?'Ocultar lista':'Pegar lista'}</button><span style="flex:1"></span><button type="button" class="btn pr" onclick="gsReg()">Guardar personas</button></div>${GS.paste?`<div style="margin-top:10px"><p class="mu" style="margin:0">Una persona por línea: <b>DNI ; Nombres y apellidos ; clave</b> (separa con punto y coma, coma o tab). Los tres datos son obligatorios.</p><textarea id="gsta" oninput="GS.txt=this.value" placeholder="45871236 ; Juan Pérez Soto ; 4821&#10;70123456 ; María Torres Ruiz ; 7390">${e(GS.txt||'').replace(/\n/g,'&#10;')}</textarea><button type="button" class="btn pr" onclick="gsPasteGo()">Pasar a la tabla</button></div>`:''}</div>`}
-  main+=L.length?`<div class="card"><div class="bar"><input type="search" id="gsq" placeholder="Buscar por DNI o nombre" value="${e(GS.q)}" oninput="gsFilt(this.value)" style="min-width:220px"><button type="button" class="pet${GS.show?' on':''}" onclick="GS.show=!GS.show;gsRe()">${GS.show?'Ocultar claves':'Mostrar claves'}</button><span style="flex:1"></span><button type="button" class="btn" onclick="gsCopy()">Copiar usuarios y claves</button><button type="button" class="btn" onclick="gsCsv()">Exportar CSV</button></div><div class="tw"><table id="gsl"><tr><th>DNI</th><th>Persona</th><th>Clave</th><th>Exámenes rendidos</th><th></th></tr>${V.map(a=>`<tr data-q="${e(nz(a.n+' '+a.c))}"><td><code>${e(a.c)}</code></td><td><div style="display:flex;align-items:center;gap:10px">${peAv(a,40)}<b>${e(a.n)}</b></div></td><td>${GS.show?`<code>${e(a.k||'—')}</code>`:'<span class="mu">••••••</span>'}</td><td>${(DB.rs||[]).filter(r=>r.al===a.id&&r.n!=null).length}</td><td style="white-space:nowrap"><button type="button" class="btn" onclick="gsEd('${a.id}')">Editar</button> <button type="button" class="btn dg" onclick="delAl('${a.id}')">Eliminar</button></td></tr>`).join('')}</table></div><p class="mu" id="gsnr" style="display:${V.length?'none':'block'};margin:10px 0 0">Nadie coincide con la búsqueda.</p></div>`:(GS.add?'':`<div class="card"><div class="msg">Este grupo aún no tiene personas. Pulsa «+ Agregar personas».</div></div>`);
+  main=`<div class="card"><div class="bar"><h3 style="margin:0;font-size:19px">${e(g.n)}</h3><span class="mu">${gsPl(L.length)}</span><span style="flex:1"></span></div><div class="bar" style="margin:0"><button type="button" class="btn" onclick="VW=\'asg\';render()">Asignar un examen a este grupo →</button></div></div>`;
+  if(false){gsEns();main+=`<div class="card"><h3>Agregar personas a «${e(g.n)}»</h3><p class="mu" style="margin:0 0 10px">Completa el <b>DNI</b> (será su usuario de ingreso), los <b>nombres y apellidos</b> y una <b>clave</b> (mínimo 4 caracteres). El DNI, el nombre y la clave son obligatorios. La foto es opcional.</p>${GS.ok?`<div class="rol" style="background:#e7f6ec;border-color:#b6e2c4;color:#14532d">${e(GS.ok)}</div>`:''}<div class="tw"><table class="rtb"><tr><th>#</th><th>DNI</th><th>Nombres y apellidos</th><th>Clave</th><th>Foto</th><th></th></tr>${gsRowsH()}</table></div><div class="bar" style="margin:12px 0 0"><button type="button" class="btn" onclick="gsRow(1)">+ Fila</button><button type="button" class="btn" onclick="gsRow(5)">+ 5 filas</button><button type="button" class="btn" onclick="gsPaste()">${GS.paste?'Ocultar lista':'Pegar lista'}</button><span style="flex:1"></span><button type="button" class="btn pr" onclick="gsReg()">Guardar personas</button></div>${GS.paste?`<div style="margin-top:10px"><p class="mu" style="margin:0">Una persona por línea: <b>DNI ; Nombres y apellidos ; clave</b> (separa con punto y coma, coma o tab). Los tres datos son obligatorios.</p><textarea id="gsta" oninput="GS.txt=this.value" placeholder="45871236 ; Juan Pérez Soto ; 4821&#10;70123456 ; María Torres Ruiz ; 7390">${e(GS.txt||'').replace(/\n/g,'&#10;')}</textarea><button type="button" class="btn pr" onclick="gsPasteGo()">Pasar a la tabla</button></div>`:''}</div>`}
+  main+=L.length?`<div class="card"><div class="bar"><input type="search" id="gsq" placeholder="Buscar por DNI o nombre" value="${e(GS.q)}" oninput="gsFilt(this.value)" style="min-width:220px"><button type="button" class="pet${GS.show?' on':''}" onclick="GS.show=!GS.show;gsRe()">${GS.show?'Ocultar claves':'Mostrar claves'}</button><span style="flex:1"></span><button type="button" class="btn" onclick="gsCopy()">Copiar usuarios y claves</button><button type="button" class="btn" onclick="gsCsv()">Exportar CSV</button></div><div class="tw"><table id="gsl"><tr><th>DNI</th><th>Asesor</th><th>Clave</th><th>Exámenes rendidos</th><th></th></tr>${V.map(a=>`<tr data-q="${e(nz(a.n+' '+a.c))}"><td><code>${e(a.c)}</code></td><td><div style="display:flex;align-items:center;gap:10px">${peAv(a,40)}<b>${e(a.n)}</b></div></td><td>${GS.show?`<code>${e(a.k||'—')}</code>`:'<span class="mu">••••••</span>'}</td><td>${(DB.rs||[]).filter(r=>r.al===a.id&&r.n!=null).length}</td><td style="white-space:nowrap"></td></tr>`).join('')}</table></div><p class="mu" id="gsnr" style="display:${V.length?'none':'block'};margin:10px 0 0">Nadie coincide con la búsqueda.</p></div>`:(GS.add?'':`<div class="card"><div class="msg">Este grupo aún no tiene asesores en la hoja.</div></div>`);
  }
  return `<div class="pe"><div class="gx"><div>${side}</div><div>${main}</div></div></div>`.replace(/\n/g,' ')}
 
@@ -1817,8 +1818,8 @@ function notasMat(mod){const M=MODN.find(x=>x[0]===mod),cols=notasDe(mod),ev={};
 const MODK={'MADERAS':'mad','FERRETERÍA':'fer','SINTÉTICOS':'sin','PROYECTOS / OPT.':'pro','DOCUMENTACIÓN':'doc','FACTURACIÓN':'fac'},
 modCol=m=>{const f=(typeof HDF!=='undefined')&&HDF[MODK[m]];return(f&&f.c)||'#06621c'};
 function notasV(){if(NG==null||(NG&&NG!=='_'&&!DB.gr.some(x=>x.id===NG))){const d=peGnew();NG=d||(NG==null?null:'')}
- const gsel=`<select class="nt-sel" onchange="NG=this.value;render()"><option value=""${NG===''?' selected':''}>Todos los grupos</option><option value="_"${NG==='_'?' selected':''}>Sin grupo</option>${[...DB.gr].reverse().map(g=>`<option value="${g.id}"${NG===g.id?' selected':''}>${e(g.n)} (${DB.al.filter(x=>x.g===g.id&&asgAct(x)).length})${g.id===peGnew()?' · más reciente':''}</option>`).join('')}</select>`;
- const mod=MODN[NMOD]?MODN[NMOD][0]:MODN[0][0],{cols,best}=notasMat(mod),tc=modCol(mod),q=nz(NQ),L=[...DB.al].sort((x,y)=>String(x.n).localeCompare(y.n)).filter(a=>asgAct(a)&&(!NG||(NG==='_'?!a.g:a.g===NG))&&(!q||nz(a.n).includes(q)||nz(a.c).includes(q))),cl=n=>n==null?'':n>=10.5?'ok':'no';
+ const gsel=`<select class="nt-sel" onchange="NG=this.value;render()"><option value=""${NG===''?' selected':''}>Todos los grupos</option><option value="_"${NG==='_'?' selected':''}>Sin grupo</option>${[...DB.gr].reverse().map(g=>`<option value="${g.id}"${NG===g.id?' selected':''}>${e(g.n)} (${DB.al.filter(x=>(x.g===g.id||(x.gs||[]).includes(g.id))&&asgAct(x)).length})${g.id===peGnew()?' · más reciente':''}</option>`).join('')}</select>`;
+ const mod=MODN[NMOD]?MODN[NMOD][0]:MODN[0][0],{cols,best}=notasMat(mod),tc=modCol(mod),q=nz(NQ),L=[...DB.al].sort((x,y)=>String(x.n).localeCompare(y.n)).filter(a=>asgAct(a)&&(!NG||(NG==='_'?!a.g:(a.g===NG||(a.gs||[]).includes(NG))))&&(!q||nz(a.n).includes(q)||nz(a.c).includes(q))),cl=n=>n==null?'':n>=10.5?'ok':'no';
  return `<div class="nt" style="--tc:${tc};--tc2:${bnMix(tc,-.34)}"><div class="nt-tabs">${MODN.map((m,i)=>`<button class="nt-tab ${i===NMOD?'on':''}" onclick="NMOD=${i};render()">${e(m[0])}</button>`).join('')}</div>
 <div class="nt-card"><div class="nt-hd"><div><small>MÓDULO · ${e(mod)}</small><b>Notas de asesores</b></div><div class="nt-tl">${gsel}<input type="search" id="nq" placeholder="🔍 Buscar asesor o DNI" value="${e(NQ)}" oninput="nQ(this)"><button type="button" class="nt-dl" data-noimg="1" onclick="ntImg(this)" title="Descargar imagen de lo que se ve en pantalla">⬇ Imagen</button></div></div>
 <div class="nt-bd"><div class="tw"><table class="nt-tb"><tr><th>ASESOR</th><th>ESTADO</th>${cols.map(c=>`<th>${e(c[1].toUpperCase())}</th>`).join('')}</tr>${L.map((a,i)=>{const v=cols.map(c=>best[a.id+'|'+c[0]]),any=v.some(x=>x!=null);return `<tr class="${i===0?'f':''}"><td><div style="display:flex;align-items:center;gap:10px">${peAv(a,36)}<div style="min-width:0"><b style="display:block">${e(a.n)}</b><small class="nt-dni">DNI ${e(a.c||'—')}</small></div></div></td><td><span class="nt-st ${any?'':'p'}">${any?'ACTIVO':'PENDIENTE'}</span></td>${v.map((x,j)=>{const pd=(window.NPEND||{})[a.id+'|'+cols[j][0]];return pd?`<td><button type="button" class="nt-c nt-pd" title="Pendiente de revisión: toca para calificar" onclick="ntRev('${pd.id}')">⏳</button></td>`:`<td><button type="button" class="nt-c ${cl(x)}" onclick="ntHist('${a.id}','${cols[j][0]}')">${x==null?'—':(+x).toFixed(1)}</button></td>`}).join('')}</tr>`}).join('')}</table></div>${L.length?'':'<p class="lk">No hay personal registrado.</p>'}<p class="nt-ft">Se muestra la nota más reciente. Toca una nota para ver el historial de intentos.</p></div></div></div>`}
@@ -1834,7 +1835,7 @@ async function ntImg(btn){const el=document.querySelector('.nt');if(!el)return;c
 function nQ(el){NQ=el.value;const p=el.selectionStart;render();const n=$('nq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(z){}}}
 function rLast(r){return Math.max(0,...r.R.map(z=>+z.at||0))}
 function rFe(t){if(!t)return '—';const d=new Date(t);return d.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'})}
-function RR(){const R=[],q=nz(RQ),d1=RD1?new Date(RD1+'T00:00:00').getTime():0,d2=RD2?new Date(RD2+'T23:59:59').getTime():0;DB.as.forEach(a=>tg(a).forEach(x=>{const s=stt(a,x.id);if(s.v&&asgAct(x)&&(!RA||x.a===RA)&&(!RG||x.g===RG)&&(!RE||a.e===RE)&&!ovr(a,x)){const o={x,a,...s};if(q&&!(nz(x.n).includes(q)||nz(x.c).includes(q)||nz(s.v.n).includes(q)))return;const t=rLast(o);if((d1||d2)&&(!t||(d1&&t<d1)||(d2&&t>d2)))return;R.push(o)}}));return R.sort((p,q)=>q.best-p.best)}
+function RR(){const R=[],q=nz(RQ),d1=RD1?new Date(RD1+'T00:00:00').getTime():0,d2=RD2?new Date(RD2+'T23:59:59').getTime():0;DB.as.forEach(a=>tg(a).forEach(x=>{const s=stt(a,x.id);if(s.v&&asgAct(x)&&(!RA||x.a===RA)&&(!RG||x.g===RG||(x.gs||[]).includes(RG))&&(!RE||a.e===RE)&&!ovr(a,x)){const o={x,a,...s};if(q&&!(nz(x.n).includes(q)||nz(x.c).includes(q)||nz(s.v.n).includes(q)))return;const t=rLast(o);if((d1||d2)&&(!t||(d1&&t<d1)||(d2&&t>d2)))return;R.push(o)}}));return R.sort((p,q)=>q.best-p.best)}
 function rQ(el){RQ=el.value;const p=el.selectionStart;render();const n=$('rq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(z){}}}
 function rClr(){RQ='';RD1='';RD2='';RA='';RG='';RE='';render()}
 /* ===== Dashboard de Resultados: gráficos por grupo y por personal (SVG, sin librerías) ===== */
@@ -2177,9 +2178,9 @@ function bxPick(){const w=document.createElement('div');w.className='mdl';
 /* ===== v36: ingreso por sede (alumno / capacitador), grupos y asignación por grupo ===== */
 /* Hoy la validación es local (un solo equipo). Cuando exista el Apps Script, SOLO hay que conectar auth():
    debe responder {ok,rol:'al'|'cap',id,n,ad,db} con la base ya filtrada por sede y rol. */
-const SEDE0=String(CFG.sede||'General'),SEDES=[SEDE0],unorm=x=>nz(x).replace(/\s+/g,'');
+const SEDES=(Array.isArray(CFG.sedes)&&CFG.sedes.length?CFG.sedes:[String(CFG.sede||'General')]).map(String),SEDE0=SEDES[0],unorm=x=>nz(x).replace(/\s+/g,'');
 let ROL='',SEDE='',ME=null,FULL=null,RG='';
-const GATE={get s(){return SEDE0},set s(v){}},GF={n:0,u:0},KS=['evals','folders','al','as','gr'],
+const GATE={s:SEDES.length===1?SEDES[0]:''},GF={n:0,u:0},KS=['evals','folders','al','as','gr'],
 gname=x=>(DB.gr.find(g=>g.id===x.g)||{}).n||'',
 ovr=(a,x)=>a.t!=='s'&&DB.as.some(b=>b.t==='s'&&b.e===a.e&&b.w===x.id),
 genK=()=>String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0');
@@ -4214,6 +4215,13 @@ inject();
 .pe .gnw{display:flex;flex-direction:column;gap:8px}.pe .gnw input{width:100%}
 .pe code{background:#eef3ef;border-radius:6px;padding:2px 7px;font-weight:700;font-size:13px}
 @media(max-width:820px){.pe .gx{grid-template-columns:1fr}}
+/* grupos arriba, asesores del grupo elegido abajo */
+.pe .gx{grid-template-columns:minmax(0,1fr)}
+.pe .gl{flex-direction:row;flex-wrap:wrap;max-height:none;overflow:visible}
+.pe .gc{min-width:170px;flex:0 1 auto}
+.pe .gc.on{border-width:2px}
+.pe .gsr{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.pe .gsr p{margin:0!important}
 </style>
 
 <script id="hoja-notas">
@@ -4283,6 +4291,133 @@ window.hojaFoto=async function(r){
 const lx=window.libX;
 if(typeof lx==='function')window.libX=function(r){const o=lx.apply(this,arguments);try{hojaNota(r)}catch(z){console.error(z)}try{hojaFoto(r)}catch(z){console.error(z)}return o};
 const en2=enter;enter=function(){en2.apply(this,arguments);setTimeout(hFlush,1800)};
+})();
+</script>
+<style id="eva-morado">
+/* barra superior morada con destello + columna lateral morada */
+.bn{overflow:hidden}
+.bn .bnt{white-space:normal;line-height:1.15;font-size:clamp(10px,2.7vw,15px);letter-spacing:.6px}
+.bn::after{content:"";position:absolute;top:0;bottom:0;left:-45%;width:32%;pointer-events:none;
+ background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.10) 30%,rgba(255,255,255,.42) 50%,rgba(255,255,255,.10) 70%,transparent 100%);
+ transform:skewX(-22deg);animation:bnDestello 4.8s ease-in-out infinite}
+@keyframes bnDestello{0%{left:-45%}55%,100%{left:125%}}
+@media (prefers-reduced-motion:reduce){.bn::after{animation:none;display:none}}
+.fs,.lb>.fs{background:linear-gradient(180deg,#3b1d6e 0%,#2a1450 100%)!important;box-shadow:4px 0 24px -10px rgba(59,29,110,.55)}
+.fs .fi{color:#e6dcf8}
+.fs .fi:hover{background:rgba(255,255,255,.12);color:#fff}
+.fs .fi.on{background:rgba(255,255,255,.18);color:#fff}
+.fs .fi.on::before{background:#c9adff}
+.fs .fi.sbm{color:#cdb9f2}
+.fs .fi.sbm.on2{background:rgba(201,173,255,.2);color:#fff}
+.sbh small{color:#cdb9f2}
+.sbh{border-bottom-color:rgba(255,255,255,.18)}
+</style>
+<script id="hoja-personal">
+/* Personal, grupos y accesos desde la hoja de la Escuela (Apps Script).
+   Varias sedes en un solo HTML: se elige la sede en la bienvenida. Master (sede * en la pestaña Claves) puede cambiar de sede. */
+(function(){
+const HOJA=String(CFG.hoja||'').trim(),TOK=String(CFG.tok||''),HP='evg_hoja_pers_';
+let LAST=null;const BUSY={},LASTRS={};
+const cur=()=>SEDE||GATE.s||SEDE0;
+const post2=(accion,sd,d)=>fetch(HOJA,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({accion,tok:TOK,sede:sd},d))}).then(r=>r.json());
+function aplicar(r,sd){
+ const G=(r.grupos||[]).map((g,i)=>{const t=Date.parse((g.mes||'')+'-01');return{id:String(g.id),n:g.nombre||'(sin nombre)',s:sd,c:(isFinite(t)?t:0)+i}});
+ const gOk=new Set(G.map(g=>g.id));
+ const old=(DB.al||[]).filter(x=>x.s===sd),byD={};old.forEach(x=>{byD[dni0(x.c)]=x});
+ const A2=(r.alumnos||[]).map(a=>{const gs=(a.grupos||[]).map(String).filter(id=>gOk.has(id));
+  gs.sort((x,y)=>(G.find(g=>g.id===y).c)-(G.find(g=>g.id===x).c));
+  return{id:String(a.id),n:String(a.nombre||'').toUpperCase(),c:String(a.dni),a:a.area||'',g:gs[0]||'',gs:gs,s:sd,f:a.foto||'',t:'',i:'',k:String(a.clave||'')}});
+ const mA={},mG={};
+ A2.forEach(n=>{const o=byD[dni0(n.c)];if(o&&o.id!==n.id)mA[o.id]=n.id});
+ (DB.gr||[]).filter(x=>x.s===sd).forEach(o=>{const n=G.find(g=>nz(g.n)===nz(o.n));if(n&&n.id!==o.id)mG[o.id]=n.id});
+ if(Object.keys(mA).length||Object.keys(mG).length){
+  (DB.rs||[]).forEach(x=>{if(mA[x.al])x.al=mA[x.al]});
+  (DB.as||[]).forEach(a=>{
+   if(a.t==='s'&&mA[a.w])a.w=mA[a.w];
+   if(a.t==='g'&&mG[a.w])a.w=mG[a.w];
+   if(a.t==='l'){if(mG[a.w])a.w=mG[a.w];if(Array.isArray(a.l))a.l=a.l.map(i=>mA[i]||i)}});
+  if(ME&&mA[ME.id]){ME.id=mA[ME.id];SID=ME.id}}
+ DB.al=(DB.al||[]).filter(x=>x.s!==sd).concat(A2);
+ DB.gr=(DB.gr||[]).filter(x=>x.s!==sd).concat(G);
+ const ar=A2.map(a=>a.a).filter(Boolean);
+ DB.ar=[...new Set([...(DB.ar||['General']),...ar])];
+}
+async function cargar(sd){
+ sd=sd||cur();
+ if(!HOJA){LAST={sd,ok:false,err:'Falta el enlace de la hoja ("hoja") al inicio del archivo.'};return false}
+ if(BUSY[sd])return BUSY[sd];
+ BUSY[sd]=(async()=>{
+  let r=null,err='';
+  try{r=await post2('eva_personal',sd,{})}catch(x){err='Sin conexión con la hoja'}
+  if(r&&r.ok){try{localStorage.setItem(HP+sd,JSON.stringify(r))}catch(x){}}
+  else{err=(r&&r.error)||err||'No se pudo leer la hoja';r=null;
+   try{const c=JSON.parse(localStorage.getItem(HP+sd)||'null');if(c&&c.ok){r=c;err+=' · se usa la última copia guardada'}}catch(x){}}
+  if(!r){LAST={sd,ok:false,err};return false}
+  if(!(r.alumnos||[]).length){LAST={sd,ok:false,err:'La hoja no tiene asesores registrados en la sede «'+sd+'».'};return false}
+  LASTRS[sd]=r;aplicar(r,sd);try{DBi()}catch(x){}
+  if(!API){try{save()}catch(x){}}
+  LAST={sd,ok:true,t:new Date(),n:r.alumnos.length,g:(r.grupos||[]).length,err:err};return true})();
+ try{return await BUSY[sd]}finally{delete BUSY[sd]}}
+window.hpEstado=function(){
+ if(!LAST||LAST.sd!==cur())return HOJA?'<p class="mu" style="margin:8px 0 0">Leyendo la hoja…</p>':'<p class="mu" style="margin:8px 0 0;color:#b91c1c">Falta el enlace de la hoja ("hoja") al inicio del archivo.</p>';
+ if(!LAST.ok)return '<p class="mu" style="margin:8px 0 0;color:#b91c1c">⚠ '+e(LAST.err)+'</p>';
+ const t=LAST.t.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+ return '<p class="mu" style="margin:8px 0 0">Leído de la hoja a las '+t+' · '+LAST.n+' asesor'+(LAST.n===1?'':'es')+' · '+LAST.g+' grupo'+(LAST.g===1?'':'s')+(LAST.err?'<br><span style="color:#b91c1c">'+e(LAST.err)+'</span>':'')+'</p>'};
+const reGate=s=>{if(!ROL&&GATE.s===s){const d=$('gd'),k=$('gk');if(!(d&&d.value)&&!(k&&k.value))render()}};
+/* bienvenida: al elegir la sede se trae su personal y sus grupos */
+const gs0=gSede;gSede=function(s){gs0.apply(this,arguments);cargar(s).then(()=>reGate(s))};
+if(SEDES.length===1)cargar(SEDES[0]).then(()=>reGate(SEDES[0]));
+/* login: «← Cambiar sede» */
+const g3=gate;gate=function(){g3.apply(this,arguments);try{
+ if(SEDES.length>1&&GATE.s&&!$('gcs')){const b=A.querySelector('.wl-box');
+  if(b)b.insertAdjacentHTML('beforeend','<p class="gnt"><a href="#" id="gcs" onclick="GATE.s=\'\';render();return false">← Cambiar sede ('+e(GATE.s)+')</a></p>')}}catch(x){}};
+/* ingreso: capacitadores y master según la pestaña Claves (la hoja valida; la clave no viaja a la página) */
+const au=auth;
+const hpl=(sd,u,k)=>post2('eva_login',sd,{usuario:u,clave:k});
+auth=async function(s,d,k){window.__hpe='';window.__MST=false;
+ let stash=[],c=null,off=false;
+ if(HOJA&&!API){stash=(DB.cp||[]).filter(x=>String(x.id).indexOf('cl_')===0);DB.cp=(DB.cp||[]).filter(x=>stash.indexOf(x)<0)}
+ let r=await au.apply(this,arguments);
+ if(!r&&HOJA&&!API){
+  try{c=await hpl(s,d,k)}catch(x){off=true}
+  if(c&&c.ok){DB.cp=DB.cp||[];DB.cp.push({id:'cl_'+s+'_'+d,c:d,n:String(c.nombre||d).toUpperCase(),k:k,s:s,ad:0,m:c.master?1:0});r=await au.apply(this,arguments)}
+  else if(off){DB.cp=(DB.cp||[]).concat(stash);r=await au.apply(this,arguments);if(!r)window.__hpe='No se pudo conectar con la hoja. Revisa que "hoja" sea la URL /exec y que la implementación permita acceso a «Cualquier persona».'}
+  else if(c&&c.error&&c.error!=='Usuario o clave incorrectos.')window.__hpe=/no v[aá]lida/i.test(c.error)?'El script de la hoja no está actualizado: vuelve a implementar la versión nueva del Apps Script.':c.error;
+  if(!r&&!off){await cargar(s);r=await au.apply(this,arguments)}}
+ else if(!r&&!HOJA&&!API)window.__hpe='Falta configurar "hoja" (URL /exec del Apps Script) al inicio del archivo.';
+ if(r&&r.rol==='cap'){const c2=(DB.cp||[]).find(x=>x.id===r.id);window.__MST=!!(c2&&c2.m)}
+ return r};
+const ge=gErr;gErr=function(m){if(m==='Usuario o clave incorrectos.'&&window.__hpe)m=window.__hpe;ge.call(this,m)};
+const sl=salir;salir=function(){window.__MST=false;return sl.apply(this,arguments)};
+/* botón «Actualizar» del capacitador */
+const cr=capRefresh;
+capRefresh=async function(){
+ if(HOJA){toast('Actualizando desde la hoja…');const ok=await cargar(SEDE);render();toast(ok?'Personal y grupos actualizados ✔':(LAST&&LAST.err)||'No se pudo leer la hoja')}
+ if(API&&M)return cr.apply(this,arguments)};
+/* master: cambiar de sede sin volver a ingresar */
+window.swSede=async function(s){
+ if(!s||s===SEDE||API)return;
+ if(CUR||PLAY||ED){toast('Cierra el examen antes de cambiar de sede');render();return}
+ toast('Cambiando a '+s+'…');
+ try{save()}catch(x){}
+ if(FULL){DB=FULL;FULL=null}
+ SEDE=s;await cargar(s);
+ view(s);VW='ev';CUR=null;SEL=null;render();toast('Sede: '+s)};
+function injSw(){
+ if(!window.__MST||ROL!=='cap'||SEDES.length<2||CUR||$('msw'))return;
+ const fs=A.querySelector('.fs');if(!fs)return;
+ fs.insertAdjacentHTML('afterbegin','<div id="msw" class="box" style="padding:10px;margin-bottom:10px"><b style="font-size:12px">MASTER · SEDE</b><select style="width:100%;margin-top:6px" onchange="swSede(this.value)">'+SEDES.map(x=>'<option'+(x===SEDE?' selected':'')+'>'+e(x)+'</option>').join('')+'</select></div>')}
+const rd0=render;render=function(){const x=rd0.apply(this,arguments);try{injSw()}catch(z){}return x};
+/* plantilla inicial: «Escuela de entrenamiento» (Práctica calificada) en todo examen que aún no tiene encabezado elegido */
+const edE=edit;edit=function(v){
+ try{if(v&&!v.hd&&typeof HDT!=='undefined'&&HDT.esc_pc){const c=hdEff(v),n=hdT0('esc_pc');
+  n.lg=c.lg;n.ch=c.ch;n.t.tx=c.t.tx;n.bd.lv=c.bd.lv;n.bd.tx=c.bd.tx;n.bd.col=c.bd.col;n.dc.sp=c.dc.sp;v.hd=n;save()}}catch(x){console.error(x)}
+ return edE.apply(this,arguments)};
+/* al entrar: refresca en segundo plano */
+const en3=enter;
+enter=function(){en3.apply(this,arguments);
+ if(API&&LASTRS[SEDE]){try{aplicar(LASTRS[SEDE],SEDE);DBi();render()}catch(x){console.error(x)}}
+ if(HOJA){const sd=SEDE;setTimeout(()=>cargar(sd).then(ok=>{if(ok&&ROL&&SEDE===sd&&!RUN&&!PLAY&&!ED&&!CUR)render()}),2500)}};
 })();
 </script>
 </body></html>
