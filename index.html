@@ -1141,7 +1141,7 @@ body:has(.wfull){overflow:hidden}
 <!-- ▼ "sede" debe llamarse IGUAL que en la pestaña Sedes de la hoja. "hoja" = URL (/exec) del Apps Script de la Escuela (notas por tema). "tok" = TOKEN_EVA del script (opcional). -->
 <!-- ▼ "hoja" también trae el personal (id, nombre, dni, área, sede, foto, clave) y los grupos desde la hoja: ya no se registran aquí. -->
 <!-- ▼ Pega aquí la URL de TU Apps Script (termina en /exec) dentro de "api". Si la dejas vacía, la app funciona solo en este equipo. -->
-<script id="cfg" type="application/json">{"api":"","sede":"General","sedes":["Villa el Salvador","Puente Piedra","Piura","Arequipa"],"hoja":"https://script.google.com/macros/s/AKfycbxLWdm8-VTyYTSR5ZSH3Az5xvsklRy_nLmXZDP2Tq_j9Qk-LkSkOUAJYh_ERcMe7Rbk/exec","tok":""}</script>
+<script id="cfg" type="application/json">{"api":"https://script.google.com/macros/s/AKfycbxLWdm8-VTyYTSR5ZSH3Az5xvsklRy_nLmXZDP2Tq_j9Qk-LkSkOUAJYh_ERcMe7Rbk/exec","sede":"General","sedes":["Villa el Salvador","Puente Piedra","Piura","Arequipa"],"hoja":"https://script.google.com/macros/s/AKfycbxLWdm8-VTyYTSR5ZSH3Az5xvsklRy_nLmXZDP2Tq_j9Qk-LkSkOUAJYh_ERcMe7Rbk/exec","tok":""}</script>
 <script>
 const $=id=>document.getElementById(id),A=$('app'),CFG=(()=>{try{return JSON.parse($('cfg').textContent)}catch(x){return{}}})(),API=CFG.api||'';
 let PT=0,DB={folders:[],evals:[]},M=false,KEY='',F='all',CUR=null,PLAY=false,ED=false,SEL=null,DR=null;
